@@ -2,14 +2,6 @@
     GD50 2018
     Pong Remake
 
-    pong-0
-    "The Day-0 Update"
-
-    -- Main Program --
-
-    Author: Colton Ogden
-    cogden@cs50.harvard.edu
-
     Originally programmed by Atari in 1972. Features two
     paddles, controlled by players, with the goal of getting
     the ball past your opponent's edge. First to 10 points wins.
@@ -42,6 +34,8 @@ function love.load()
 
     love.graphics.setDefaultFilter('nearest', 'nearest')
 
+    math.randomseed(os.time())
+
     retroFont = love.graphics.newFont('fonts/retro.ttf', 8)
 
     retroFontForScore = love.graphics.newFont('fonts/retro.ttf', 32)
@@ -61,22 +55,38 @@ function love.load()
     player1Y = 30
     player2Y = VIRTUAL_HEIGHT - 50
 
+    -- velocity and position variables for our ball when play starts
+    ballX = VIRTUAL_WIDTH / 2 - 2
+    ballY = VIRTUAL_HEIGHT / 2 - 2
+
+    -- math.random returns a random value between the left and right number
+    ballDX = math.random(2) == 1 and 100 or -100
+    ballDY = math.random(-50, 50)
+
+    -- transition between different parts of the game
+    gameState = 'start'
+
 end
 
 
 function love.update( dt )
     -- Player 1 movement
     if love.keyboard.isDown('w') then
-        player1Y = player1Y + -PADDLE_SPEED * dt -- Up
+        player1Y = math.max(0, player1Y + -PADDLE_SPEED * dt)
     elseif love.keyboard.isDown('s') then
-        player1Y = player1Y + PADDLE_SPEED * dt -- Down
+        player1Y = math.min(VIRTUAL_HEIGHT - 20, player1Y + PADDLE_SPEED * dt)
     end
 
     -- Player 2 movement
     if love.keyboard.isDown('up') then
-        player2Y = player2Y + -PADDLE_SPEED * dt -- Up
+        player2Y = math.max(0, player2Y + -PADDLE_SPEED * dt)
     elseif love.keyboard.isDown('down') then
-        player2Y = player2Y + PADDLE_SPEED * dt -- Down
+        player2Y = math.min(VIRTUAL_HEIGHT - 20, player2Y + PADDLE_SPEED * dt)
+    end
+
+    if gameState == 'play' then
+        ballX = ballX + ballDX * dt
+        ballY = ballY + ballDY * dt
     end
 end
 
@@ -85,6 +95,20 @@ function love.keypressed( key )
     if key == 'escape' then
         -- terminal the application
         love.event.quit()
+    
+    elseif key == 'enter' or key == 'return' then
+
+        if gameState == 'start' then
+            gameState = 'play'
+        else
+            gameState = 'start'
+
+            ballX = VIRTUAL_WIDTH / 2 - 2 
+            ballY = VIRTUAL_HEIGHT / 2 - 2
+
+            ballDX = math.random(2) == 1 and 100 or -100
+            ballDY = math.random(-50, 50) * 1.5
+        end
     end
 end
 
@@ -114,7 +138,7 @@ function love.draw()
     love.graphics.rectangle('fill', VIRTUAL_WIDTH - 10, player2Y, 5, 20)
 
     -- render ball (center)
-    love.graphics.rectangle('fill', VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
+    love.graphics.rectangle('fill', ballX, ballY, 4, 4)
 
     -- end rendering at virtual resolution
 
